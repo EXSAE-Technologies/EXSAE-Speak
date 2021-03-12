@@ -23,11 +23,11 @@ from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 class Tts:
     def __init__(self):
         self.engine = pyttsx3.init()
+        self.filepath = ""
     
-    def save(self, text):
-        filename = 'data'+os.path.sep+'saved-'+str(time.time())+'.mp3'
-        filepath = os.path.dirname(__file__)+os.path.sep+filename
-        self.engine.save_to_file(text, filepath)
+    def save(self, text, file):
+        self.filepath = file[0]
+        self.engine.save_to_file(text, self.filepath)
         self.engine.runAndWait()
 
 
@@ -44,22 +44,7 @@ class Window(QWidget):
         self.saveBtn = QPushButton(text="Save")
         self.saveBtn.clicked.connect(self.save)
 
-        #open button
-        self.open = QPushButton(text="Open")
-        self.open.clicked.connect(self.open_file)
-
-        #play Button
-        self.play = QPushButton()
-        self.play.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
-
-        #Player button
-        self.playerBtn = QPushButton(text="Player")
-
-        #Slider
-        self.slider = QSlider(orientation=Qt.Horizontal)
-
-        #Media Player
-        self.mediaPlayer = QMediaPlayer()
+        self.label = QLabel()
 
         #Initialize user interface
         self.init_ui()
@@ -67,24 +52,24 @@ class Window(QWidget):
     def init_ui(self):
         vlay = QVBoxLayout()
         vlay.addWidget(self.textEdit)
-        vlay.addWidget(self.slider)
+        vlay.addWidget(self.label)
         self.setLayout(vlay)
 
         hlay = QHBoxLayout()
         hlay.addWidget(self.saveBtn)
-        hlay.addWidget(self.open)
         vlay.addLayout(hlay)
     
     def save(self):
-        self.saveBtn.setEnabled(False)
-        tts = Tts()
-        tts.save(self.textEdit.toPlainText())
-        self.textEdit.setPlainText("")
-        self.saveBtn.setEnabled(True)
-    
-    def open_file(self):
-        filename, _ = QFileDialog.getOpenFileUrl(None, filter="*.mp3")
-        print(filename)
+        if self.textEdit.toPlainText() != "":
+            self.saveBtn.setEnabled(False)
+            file = QFileDialog.getSaveFileName(None, "Save to audio file", filter="*.mp3")
+            tts = Tts()
+            tts.save(self.textEdit.toPlainText(), file)
+            self.textEdit.setPlainText("")
+            self.saveBtn.setEnabled(True)
+            self.label.setText("")
+        else:
+            self.label.setText("No text to read!")
 
 
 app = QApplication(sys.argv)

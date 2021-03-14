@@ -1,7 +1,6 @@
 import sys
 import os
 import pyttsx3
-import time
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -11,7 +10,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QHBoxLayout,
     QFileDialog,
-    QStyle,
     QLabel,
     QSlider,
 )
@@ -54,6 +52,10 @@ class Window(QWidget):
         self.testBtn = QPushButton(text="Run Test")
         self.testBtn.clicked.connect(self.run_test_speech)
 
+        #Open file Button
+        self.openfileBtn = QPushButton(text="Open file")
+        self.openfileBtn.clicked.connect(self.open_file)
+
         self.label = QLabel()
 
         #Slider
@@ -82,36 +84,45 @@ class Window(QWidget):
         vlay.addLayout(hlays)
 
         hlay = QHBoxLayout()
+        hlay.addWidget(self.openfileBtn)
         hlay.addWidget(self.saveBtn)
         hlay.addWidget(self.testBtn)
         vlay.addLayout(hlay)
     
     def save(self):
         if self.textEdit.toPlainText() != "":
-            self.saveBtn.setEnabled(False)
+            self.all_buttons(False)
             file = QFileDialog.getSaveFileName(None, "Save to audio file", filter="*.mp3")
             self.tts.save(self.textEdit.toPlainText(), file)
             self.textEdit.setPlainText("")
-            self.saveBtn.setEnabled(True)
+            self.all_buttons(True)
             self.label.setText("")
         else:
             self.label.setText("No text to read!")
+    
+    def open_file(self):
+        self.all_buttons(False)
+        filename = QFileDialog.getOpenFileName(None, "Open text file", filter="*.txt")
+        file = open(filename[0], "r")
+        self.textEdit.setPlainText(file.read())
+        self.all_buttons(True)
     
     def slider_value_changed(self, value):
         self.sliderMin.setText(str(value))
         self.tts.change_rate(value)
     
     def run_test_speech(self):
-        self.saveBtn.setEnabled(False)
-        self.testBtn.setEnabled(False)
-        self.slider.setEnabled(False)
+        self.all_buttons(False)
         text = "The quick brown fox jumps over the lazy dog."
         self.tts.engine.say(text)
         self.tts.engine.runAndWait()
-        self.saveBtn.setEnabled(True)
-        self.testBtn.setEnabled(True)
-        self.slider.setEnabled(True)
-
+        self.all_buttons(True)
+    
+    def all_buttons(self, set_to=False):
+        self.saveBtn.setEnabled(set_to)
+        self.testBtn.setEnabled(set_to)
+        self.slider.setEnabled(set_to)
+        self.openfileBtn.setEnabled(set_to)
 
 app = QApplication(sys.argv)
 style = """
